@@ -117,10 +117,7 @@
 
 //Configuracoes do botao SW300 , id 10, PA11
 
-#define BUT_PIO			PIOA
-#define BUT_PIO_ID		10  
-#define BUT_PIO_IDX		11
-#define BUT_PIO_IDX_MASK (1u << BUT_PIO_IDX)
+
 
 //Configuracoes do (BUZZER) pino PB1 , id 11, PB1
 
@@ -132,7 +129,7 @@
 //Configuracoes do (BOTAO2) pino PB0 , id 11, PB0
 
 #define BUT2_PIO			PIOB
-#define BUT2_PIO_ID		11
+#define BUT2_PIO_ID			11
 #define BUT2_PIO_IDX		0
 #define BUT2_PIO_IDX_MASK (1u << BUT2_PIO_IDX)
 
@@ -195,18 +192,19 @@ void init(void){
 	// Inicializa PB1 como saída.
 	pio_set_output(BUZZER_PIO, BUZZER_PIO_IDX_MASK, 0, 0, 0);
 	
-	// Inicializa PIO do botao
-	pmc_enable_periph_clk(BUT_PIO_ID);
-	// Inicializa PA11 como entrada com um pull-up.
-	pio_set_input(BUT_PIO,BUT_PIO_IDX_MASK,PIO_DEFAULT);
-	pio_pull_up(BUT_PIO,BUT_PIO_IDX_MASK,1);
+
 	
 	// Inicializa PIO do botao2
 	pmc_enable_periph_clk(BUT2_PIO_ID);
 	// Inicializa PB0 como entrada com um pull-up.
 	pio_set_input(BUT2_PIO,BUT2_PIO_IDX_MASK,PIO_DEFAULT);
 	pio_pull_up(BUT2_PIO,BUT2_PIO_IDX_MASK,1);
-
+	
+	// Inicializa PIO do botao3
+	pmc_enable_periph_clk(BUT3_PIO_ID);
+	// Inicializa PB2 como entrada com um pull-up.
+	pio_set_input(BUT3_PIO,BUT3_PIO_IDX_MASK,PIO_DEFAULT);
+	pio_pull_up(BUT3_PIO,BUT3_PIO_IDX_MASK,1);
 
 }
 
@@ -435,7 +433,7 @@ int main(void)
 		for (int thisNote = 0; thisNote < size; thisNote++) {
 			int noteDuration = 1000 / tempo[thisNote];
 			buzz(melody[thisNote], noteDuration);
-			if(!(pio_get(BUT_PIO, PIO_INPUT, BUT_PIO_IDX_MASK))){ //se o botao de play for pressionado para a musica
+			if(!(pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK))){ //se o botao de play for pressionado para a musica
 				buzz(0, noteDuration);
 				delay_s(2);
 				return;
@@ -452,8 +450,10 @@ int main(void)
 	// aplicacoes embarcadas não devem sair do while(1).
 	while (1)
 	{
-	if(!(pio_get(BUT_PIO, PIO_INPUT, BUT_PIO_IDX_MASK))){ // se o botao de play for clicado toca a musica
-		delay_s(0.5);
+	if(!(pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK))){ // se o botao de play for clicado toca a musica
+		while(!(pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK))){
+			delay_ms(10);
+		}
 		if(music == 1){
 			int size = sizeof(music1_melody) / sizeof(int);
 			play_music(music1_melody, music1_tempo, size);
@@ -468,7 +468,12 @@ int main(void)
 			}
 	}
 	
-	else if(!(pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK))){ // se o botao de trocar for clicado troca de musica
+	if(!(pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)))
+	{ // se o botao de trocar for clicado troca de musica
+		while(!(pio_get(BUT2_PIO, PIO_INPUT, BUT2_PIO_IDX_MASK)))
+		{
+			delay_ms(30);
+		}		
 		if(music == 3){
 			music = 1;
 			}
