@@ -168,10 +168,6 @@
  * \param p_pio Pointer to a PIO instance.
  * \param ul_mask Bitmask of one or more pin(s) to configure.
  */
-void _pio_set(Pio *p_pio, const uint32_t ul_mask)
-{
-
-}
 
 
 // Função de inicialização do uC
@@ -208,6 +204,37 @@ void init(void){
 
 }
 
+void buzz(long frequency, long length) {
+	pio_clear(PIOC, LED_PIO_IDX_MASK); //liga o led de acordo com os toques
+	long delayValue = 1000000 / frequency / 2;
+	long numCycles = frequency * length / 1000;
+	for (long i = 0; i < numCycles; i++) {
+		pio_set(BUZZER_PIO, BUZZER_PIO_IDX_MASK);	// Coloca 1 no pino BUZZER
+		delay_us(delayValue);						//delay de acordo com a frequencia e duracao do toque
+		pio_clear(BUZZER_PIO, BUZZER_PIO_IDX_MASK); // Coloca 0 no pino do BUZZER
+		delay_us(delayValue);
+	}
+	pio_set(PIOC, LED_PIO_IDX_MASK); //liga o led de acordo com os toques
+		
+}
+
+void play_music(int melody[], int tempo[], int size){
+	for (int thisNote = 0; thisNote < size; thisNote++) {
+		int noteDuration = 1000 / tempo[thisNote];
+		buzz(melody[thisNote], noteDuration);
+		if(!(pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK))){ //se o botao de play for pressionado para a musica
+			buzz(0, noteDuration);
+			delay_s(2);
+			return;
+		}
+			
+		int pauseBetweenNotes = noteDuration * 1.10;
+		delay_ms(pauseBetweenNotes); //tempo entre os toques
+			
+		buzz(0, noteDuration);
+	}
+}
+
 
 /********/
 /* Main                                                                 */
@@ -219,6 +246,7 @@ int main(void)
 	init();
 	//*****************************************
 	//mario music
+	//fonte: https://www.princetronics.com/supermariothemesong/
 	int music3_melody[] = {
 	NOTE_E7, NOTE_E7, 0, NOTE_E7,
 	0, NOTE_C7, NOTE_E7, 0,
@@ -273,6 +301,7 @@ int main(void)
 		};
 	//*****************************************
 	//xmas music
+	//fonte: https://www.hackster.io/joshi/piezo-christmas-songs-fd1ae9
 	int music1_melody[] = {	
 		NOTE_E5, NOTE_E5, NOTE_E5,
 		NOTE_E5, NOTE_E5, NOTE_E5,
@@ -311,6 +340,7 @@ int main(void)
 	};
 	//*****************************************
 	//pirates of the caribbean music
+	// fonte: https://github.com/xitangg/-Pirates-of-the-Caribbean-Theme-Song/blob/master/Pirates_of_the_Caribbean_-_Theme_Song.ino
 	int music2_melody[] = {
 		NOTE_E4, NOTE_G4, NOTE_A4, NOTE_A4, 0,
 		NOTE_A4, NOTE_B4, NOTE_C5, NOTE_C5, 0,
@@ -416,35 +446,6 @@ int main(void)
   12, 12, 12, 12, 12, 16
 	};
 	//*****************************************
-	void buzz(long frequency, long length) {
-		pio_clear(PIOC, LED_PIO_IDX_MASK); //liga o led de acordo com os toques
-		long delayValue = 1000000 / frequency / 2;
-		long numCycles = frequency * length / 1000;
-		for (long i = 0; i < numCycles; i++) {
-			pio_set(BUZZER_PIO, BUZZER_PIO_IDX_MASK);	// Coloca 1 no pino BUZZER
-			delay_us(delayValue);						//delay de acordo com a frequencia e duracao do toque
-			pio_clear(BUZZER_PIO, BUZZER_PIO_IDX_MASK); // Coloca 0 no pino do BUZZER
-			delay_us(delayValue);
-		}
-		pio_set(PIOC, LED_PIO_IDX_MASK); //liga o led de acordo com os toques
-		
-	}	
-	void play_music(int melody[], int tempo[], int size){
-		for (int thisNote = 0; thisNote < size; thisNote++) {
-			int noteDuration = 1000 / tempo[thisNote];
-			buzz(melody[thisNote], noteDuration);
-			if(!(pio_get(BUT3_PIO, PIO_INPUT, BUT3_PIO_IDX_MASK))){ //se o botao de play for pressionado para a musica
-				buzz(0, noteDuration);
-				delay_s(2);
-				return;
-			}
-			
-			int pauseBetweenNotes = noteDuration * 1.10;
-			delay_ms(pauseBetweenNotes); //tempo entre os toques
-			
-			buzz(0, noteDuration);
-			}
-		}
 	int music  = 1;
 	// super loop
 	// aplicacoes embarcadas não devem sair do while(1).
